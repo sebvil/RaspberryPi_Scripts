@@ -7,9 +7,13 @@ import calibration
 
 hostname = subprocess.check_output("hostname", shell=True).strip()
 
+commander_hostname = "sebastian-VirtualBox"
+
 credentials = pika.PlainCredentials('sebvil1', 'rabbit')
 
-ip = subprocess.check_output("/home/pi/'Camera Project'/getIP.sh", shell = True).strip()
+ip = subprocess.check_output("avahi-resolve-host-name %s.local" % commander_hostname, shell = True).split()[1]
+
+ip = ip+"%eth0"
 
 parameters = pika.ConnectionParameters(ip, 5672, "/", credentials)
 connection = pika.BlockingConnection(parameters)
@@ -33,8 +37,7 @@ def callback(ch, method, props, body):
 def take_picture(cam, filename):
 	cam.capture(filename)								# Takes picture and saves it under the filename
 
-def send_to_shock(image, frame_id):
-	ip = subprocess.check_output("/home/pi/'Camera Project'/getIP.sh", shell =True).strip()			# Gets IP address of Ubuntu machine
+def send_to_shock(image, frame_id, ip):
 	time = str(datetime.datetime.now())                                             # Gets current time
 	# Command ends picture along with metadata to shock-server
 	command = "curl -X POST -F \'attributes_str={\"Frame ID\": \"%s\", \"RPi Hostname\": \"%s\", \"Time Stamp\": \"%s\", \"Image name\" :\"%s\"}\' -F \"upload=@%s\" %s:7445/node" % (frame_id, hostname, time, image, image, ip)
@@ -64,7 +67,7 @@ while True:
 		print "Command received: Take picture and send it to Shock."
 		camera = picamera.PiCamera(resolution='3280x2464')
 		take_picture(camera, "image.jpg")
-		resp = send_to_shock("image.jpg", frame_id)
+		resp = send_to_shock("image.jpg", frame_id, ip)
 		message = resp[0]
 		id = resp[1]
 		camera.close()
