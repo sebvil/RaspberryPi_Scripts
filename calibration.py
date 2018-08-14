@@ -7,6 +7,8 @@ import glob
 import yaml
 import subprocess
 
+subprocess.call("mkdir ../ChessPics", shell=True)
+
 def capture(count):
 
 	criteria = (cv2.TERM_CRITERIA_EPS +cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -37,7 +39,7 @@ def capture(count):
 		if ret == True:
 			name = "%i.png" % count
 
-			cv2.imwrite("Chess1/%s" % name, img)
+			cv2.imwrite("../ChessPics/%s" % name, img)
 
                 	objpoints.append(objp)
                 	cv2.cornerSubPix(gray, corners, (11,11),(-1,-1), criteria)
@@ -62,7 +64,7 @@ def calibrate(hostname):
 	objpoints = []
 	imgpoints = []
 
-	images = glob.glob('Chess1/*.png')
+	images = glob.glob('../ChessPics/*.png')
 
 	for fname in images:
         	img = cv2.imread(fname)
