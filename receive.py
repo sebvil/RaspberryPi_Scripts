@@ -92,6 +92,7 @@ while True:
 	elif response == "4":
 		print "Command received: Restart calibration"
 		count = 0
+		trials = 0
 		message = "Calibration reset"
 	else:
 		message=  "Command '%s' not found" % response
