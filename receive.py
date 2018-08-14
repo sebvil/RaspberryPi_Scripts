@@ -89,6 +89,10 @@ while True:
 			trials =0 
 			calibration.calibrate(hostname)
 			message = "calibrated"
+	elif response == "4":
+		print "Command received: Restart calibration"
+		count = 0
+		message = "Calibration reset"
 	else:
 		message=  "Command '%s' not found" % response
 		print message
