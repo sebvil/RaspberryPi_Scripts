@@ -87,7 +87,7 @@ while True:
 		if count == 10:
 			count = 0
 			trials =0 
-			calibration.calibrate(hostname)
+			calibration.calibrate(hostname, ip)
 			message = "calibrated"
 	elif response == "4":
 		print "Command received: Restart calibration"

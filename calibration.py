@@ -54,7 +54,7 @@ def capture(count):
 	return [ret, count]
 
 
-def calibrate(hostname):
+def calibrate(hostname, ip):
 	criteria = (cv2.TERM_CRITERIA_EPS +cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
@@ -96,8 +96,6 @@ def calibrate(hostname):
 
 	with open(file, "w") as f:
 		yaml.dump(data, f)
-
-	ip = subprocess.check_output("/home/pi/'Camera Project'/getIP.sh", shell =True).strip()
 
 	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@camera_data.yaml\" %s:7445/node" % (hostname, ip)
 
