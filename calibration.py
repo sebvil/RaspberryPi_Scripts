@@ -7,8 +7,6 @@ import glob
 import yaml
 import subprocess
 
-subprocess.call("mkdir ../ChessPics", shell=True)
-
 def capture(count):
 
 	criteria = (cv2.TERM_CRITERIA_EPS +cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -99,4 +97,6 @@ def calibrate(hostname, ip):
 
 	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@camera_data.yaml\" %s:7445/node" % (hostname, ip)
 
+
 	subprocess.call(command, shell = True)
+	subprocess.call("rm camera_data.yaml", shell=True)
