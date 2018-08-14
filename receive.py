@@ -79,7 +79,7 @@ while True:
 	elif response == "3":
 		print "Command received: Calibrate camera"
 		if count < 10:
-			subprocess.call("mkdir ../ChessPics")
+			subprocess.call("mkdir ../ChessPics", shell=True)
 			ret, count = calibration.capture(count)
 			trials += 1
 		        channel.basic_publish(exchange='confirmation', routing_key='confirmation', properties=pika.BasicProperties(reply_to=hostname, correlation_id = id), body = "Picture taken: %r  Successes/Trials: %s/%s" % (ret, count, trials) )
