@@ -7,6 +7,8 @@ import glob
 import yaml
 import subprocess
 
+subprocess.call("mkdir /home/pi/ChessPics", shell=True)
+
 def capture(count):
 
 	criteria = (cv2.TERM_CRITERIA_EPS +cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -36,8 +38,7 @@ def capture(count):
 
 		if ret == True:
 			name = "%i.png" % count
-
-			cv2.imwrite("../ChessPics/%s" % name, img)
+			cv2.imwrite("/home/pi/ChessPics/%s" % name, img)
 
                 	objpoints.append(objp)
                 	cv2.cornerSubPix(gray, corners, (11,11),(-1,-1), criteria)
@@ -62,7 +63,7 @@ def calibrate(hostname, ip):
 	objpoints = []
 	imgpoints = []
 
-	images = glob.glob('../ChessPics/*.png')
+	images = glob.glob('/home/pi/ChessPics/*.png')
 
 	for fname in images:
         	img = cv2.imread(fname)
@@ -89,14 +90,14 @@ def calibrate(hostname, ip):
 
 	data = {"ret": ret, "camera _matrix": mtx.tolist(), "distortion coefficients": dist.tolist(), "rotation vectors": rotv, "translation vectors": tranv}
 
-	file = "camera_data.yaml"
+	file = "/home/pi/camera_data.yaml"
 
 
 	with open(file, "w") as f:
 		yaml.dump(data, f)
 
-	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@camera_data.yaml\" %s:7445/node" % (hostname, ip)
+	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@/home/pi/camera_data.yaml\" %s:7445/node" % (hostname, ip)
 
 
 	subprocess.call(command, shell = True)
-	subprocess.call("rm camera_data.yaml", shell=True)
+
