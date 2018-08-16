@@ -10,12 +10,14 @@ import string
 hostname = subprocess.check_output("hostname", shell=True).strip()
 
 commander_hostname = "sebastian-VirtualBox"
+commander_hostname = "qatux"
 
 credentials = pika.PlainCredentials('sebvil1', 'rabbit')
 
 ip = subprocess.check_output("avahi-resolve-host-name %s.local" % commander_hostname, shell = True).split()[1]
 
 ip = ip+"%eth0"
+ip = "169.254.237.162"
 
 parameters = pika.ConnectionParameters(ip, 5672, "/", credentials)
 connection = pika.BlockingConnection(parameters)
