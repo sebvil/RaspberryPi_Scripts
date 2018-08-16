@@ -90,13 +90,13 @@ def calibrate(hostname, ip):
 
 	data = {"ret": ret, "camera _matrix": mtx.tolist(), "distortion coefficients": dist.tolist(), "rotation vectors": rotv, "translation vectors": tranv}
 
-	file = "/home/pi/camera_data.yaml"
+	file = "/home/pi/%s-data.yaml" % hostname
 
 
 	with open(file, "w") as f:
 		yaml.dump(data, f)
 
-	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@/home/pi/camera_data.yaml\" %s:7445/node" % (hostname, ip)
+	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@/home/pi/%s\" %s:7445/node" % (hostname, file, ip)
 
 
 	subprocess.call(command, shell = True)

@@ -4,6 +4,8 @@ import picamera
 import datetime
 import shlex
 import calibration
+import string
+
 
 hostname = subprocess.check_output("hostname", shell=True).strip()
 
@@ -37,10 +39,10 @@ def callback(ch, method, props, body):
 def take_picture(cam, filename):
 	cam.capture(filename)								# Takes picture and saves it under the filename
 
-def send_to_shock(image, frame_id, ip):
+def send_to_shock(image, frame_id, ip, mode):
 	time = str(datetime.datetime.now())                                             # Gets current time
 	# Command ends picture along with metadata to shock-server
-	command = "curl -X POST -F \'attributes_str={\"Frame ID\": \"%s\", \"RPi Hostname\": \"%s\", \"Time Stamp\": \"%s\", \"Image name\" :\"%s\"}\' -F \"upload=@%s\" %s:7445/node" % (frame_id, hostname, time, image, image, ip)
+	command = "curl -X POST -F \'attributes_str={\"Frame ID\": \"%s\", \"RPi Hostname\": \"%s\", \"Time Stamp\": \"%s\", \"Mode\": \"%s\"}\' -F \"upload=@%s\" %s:7445/node" % (frame_id, hostname, time, mode, image, ip)
 
 	args = shlex.split(command)							# Splits the words of the command and puts it in a list. Necessarry fo subprocess.call method below
 	try:
@@ -63,11 +65,21 @@ while True:
 
 	message = ""
 	id = "None"
+	punct = string.punctuation
+        dash = "-" * len(punct)
+        transtab = string.maketrans(punct, dash)
+        frame_id = str(frame_id).translate(transtab).replace(" ", "-")
+
 	if response == "1":
 		print "Command received: Take picture and send it to Shock."
 		camera = picamera.PiCamera(resolution='3280x2464')
-		take_picture(camera, "image.jpg")
-		resp = send_to_shock("image.jpg", frame_id, ip)
+		cam_num = int(hostname[-1])
+		if cam_num % 2 == 1:
+			camera.rotation = 180
+		pic = "%s-%s.jpg" % (hostname, frame_id)
+		take_picture(camera, pic)
+		resp = send_to_shock(pic, frame_id, ip, "capture")
+		subprocess.call("rm %s" % pic, shell =True)
 		message = resp[0]
 		id = resp[1]
 		camera.close()
@@ -78,6 +90,15 @@ while True:
 		break
 	elif response == "3":
 		print "Command received: Calibrate camera"
+                camera = picamera.PiCamera(resolution='3280x2464')
+                cam_num = int(hostname[-1])
+                if cam_num % 2 == 1:
+                        camera.rotation = 180
+                pic = "%s-%s.jpg" % (hostname, frame_id)
+                take_picture(camera, pic)
+                resp = send_to_shock(pic, frame_id, ip, "calibration")
+		subprocess.call("rm %s" % pic, shell = True)
+		camera.close()
 		if count < 10:
 			ret, count = calibration.capture(count)
 			trials += 1
@@ -85,8 +106,6 @@ while True:
 			continue
 		print "count =", count
 		if count == 10:
-			count = 0
-			trials =0 
 			calibration.calibrate(hostname, ip)
 			message = "calibrated"
 	elif response == "4":
