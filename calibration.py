@@ -16,8 +16,8 @@ def capture(count):
 	objp = np.zeros((6 * 7, 3), np.float32)
 	objp[:,:2] = np.mgrid[0:7:,0:6].T.reshape(-1,2)
 
-	camera = PiCamera(resolution = '960x720')
-	rawCapture = PiRGBArray(camera, size =(960, 720))
+	camera = PiCamera(resolution = '1920x1440')
+	rawCapture = PiRGBArray(camera, size =(1920, 1440))
 
 	objpoints = []
 	imgpoints = []
