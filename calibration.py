@@ -7,7 +7,11 @@ import glob
 import yaml
 import subprocess
 
-subprocess.call("mkdir /home/pi/ChessPics", shell=True)
+
+try:
+	subprocess.check_output("ls /home/pi | grep ChessPicss", shell =True)
+except subprocess.CalledProcessError:
+	subprocess.call("mkdir /home/pi/ChessPicss", shell=True)
 
 def capture(count):
 
@@ -16,8 +20,8 @@ def capture(count):
 	objp = np.zeros((6 * 7, 3), np.float32)
 	objp[:,:2] = np.mgrid[0:7:,0:6].T.reshape(-1,2)
 
-	camera = PiCamera(resolution = '320x240')
-	rawCapture = PiRGBArray(camera, size =(320, 240))
+	camera = PiCamera(resolution = '640x480')
+	rawCapture = PiRGBArray(camera, size =(640, 480))
 
 	objpoints = []
 	imgpoints = []

@@ -17,7 +17,7 @@ credentials = pika.PlainCredentials('sebvil1', 'rabbit')
 ip = subprocess.check_output("avahi-resolve-host-name %s.local" % commander_hostname, shell = True).split()[1]
 
 ip = ip+"%eth0"
-ip = "169.254.237.162"
+#ip = "169.254.237.162"
 
 parameters = pika.ConnectionParameters(ip, 5672, "/", credentials)
 connection = pika.BlockingConnection(parameters)
@@ -48,10 +48,8 @@ def send_to_shock(image, frame_id, ip, mode):
 
 	args = shlex.split(command)							# Splits the words of the command and puts it in a list. Necessarry fo subprocess.call method below
 	try:
-		out = subprocess.check_output(args)
-		start = out.find("id")+5
-		end = out.find('","ver')
-		id = out[start:end]
+		out = subprocess.call(args)
+		id = "None"
 		return ["Picture sent succesfully", id]
 	except subprocess.CalledProcessError:
 		return ["Picture could not be sent", "None"]							# Calls the command, i.e., sends picture shock-server
