@@ -57,7 +57,7 @@ def capture(count):
 	return [ret, count]
 
 
-def calibrate(hostname, ip):
+def calibrate(hostname, ip, frame_id):
 	criteria = (cv2.TERM_CRITERIA_EPS +cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
@@ -92,7 +92,7 @@ def calibrate(hostname, ip):
 		tranv.append(arr.tolist())
 
 
-	data = {"ret": ret, "camera _matrix": mtx.tolist(), "distortion coefficients": dist.tolist(), "rotation vectors": rotv, "translation vectors": tranv}
+	data = {"ret": ret, "camera matrix": mtx.tolist(), "distortion coefficients": dist.tolist(), "rotation vectors": rotv, "translation vectors": tranv}
 
 	file = "/home/pi/%s-data.yaml" % hostname
 
@@ -100,7 +100,7 @@ def calibrate(hostname, ip):
 	with open(file, "w") as f:
 		yaml.dump(data, f)
 
-	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@/home/pi/%s\" %s:7445/node" % (hostname, file, ip)
+	command = "curl -X POST -F \'attributes_str={\"RPi Hostname\": \"%s\", \"Frame ID\": \"%s\", \"file\": \"camera parameters\"}\' -F \"upload=@/home/pi/%s\" %s:7445/node" % (hostname, frame_id,  file, ip)
 
 
 	subprocess.call(command, shell = True)

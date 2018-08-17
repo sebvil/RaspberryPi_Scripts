@@ -5,22 +5,39 @@ import datetime
 import shlex
 import calibration
 import string
+import socket
+import time 
 
 
 hostname = subprocess.check_output("hostname", shell=True).strip()
 
-commander_hostname = "sebastian-VirtualBox"
+
 commander_hostname = "qatux"
 
 credentials = pika.PlainCredentials('sebvil1', 'rabbit')
 
-ip = subprocess.check_output("avahi-resolve-host-name %s.local" % commander_hostname, shell = True).split()[1]
+ip6 = subprocess.check_output("avahi-resolve-host-name -6 %s.local" % commander_hostname, shell = True).split()[1]
+ip = ip6+"%eth0"
 
-ip = ip+"%eth0"
-#ip = "169.254.237.162"
-
+ip4 = subprocess.check_output("avahi-resolve-host-name -4 %s.local" % commander_hostname, shell = True).split()[1]
 parameters = pika.ConnectionParameters(ip, 5672, "/", credentials)
-connection = pika.BlockingConnection(parameters)
+
+connected = False
+try_counter = 0
+
+while not connected and try_counter < 1:
+	try:
+		print parameters
+		connection = pika.BlockingConnection(parameters)
+		connected = True
+	except socket.gaierror:
+		try_counter += 1
+		print "Count: %s" % try_counter
+		time.sleep(0.5)
+		pass
+
+if not connected:
+	quit()
 
 channel = connection.channel()
 
@@ -48,7 +65,7 @@ def send_to_shock(image, frame_id, ip, mode):
 
 	args = shlex.split(command)							# Splits the words of the command and puts it in a list. Necessarry fo subprocess.call method below
 	try:
-		out = subprocess.call(args)
+		out = subprocess.check_output(args)
 		id = "None"
 		return ["Picture sent succesfully", id]
 	except subprocess.CalledProcessError:
@@ -57,12 +74,14 @@ def send_to_shock(image, frame_id, ip, mode):
 
 count = 0
 trials = 0
+calibrated = False
+time_stamp = ""
 while True:
 	quit = False
 	print "Waiting for command..."
 	channel.basic_consume(callback, queue=hostname, no_ack=True)
 	channel.start_consuming()
-
+	
 	message = ""
 	id = "None"
 	punct = string.punctuation
@@ -78,7 +97,7 @@ while True:
 			camera.rotation = 180
 		pic = "%s-%s.jpg" % (hostname, frame_id)
 		take_picture(camera, pic)
-		resp = send_to_shock(pic, frame_id, ip, "capture")
+		resp = send_to_shock(pic, frame_id, ip4, "capture")
 		subprocess.call("rm %s" % pic, shell =True)
 		message = resp[0]
 		id = resp[1]
@@ -89,6 +108,9 @@ while True:
 		message = "Quit succesfully"
 		break
 	elif response == "3":
+		if trials == 0:
+			time_stamp = frame_id
+
 		print "Command received: Calibrate camera"
                 camera = picamera.PiCamera(resolution='3280x2464')
                 cam_num = int(hostname[-1])
@@ -96,7 +118,7 @@ while True:
                         camera.rotation = 180
                 pic = "%s-%s.jpg" % (hostname, frame_id)
                 take_picture(camera, pic)
-                resp = send_to_shock(pic, frame_id, ip, "calibration")
+                resp = send_to_shock(pic, frame_id, ip4, "calibration")
 		subprocess.call("rm %s" % pic, shell = True)
 		camera.close()
 		if count < 10:
@@ -105,13 +127,17 @@ while True:
 		        channel.basic_publish(exchange='confirmation', routing_key='confirmation', properties=pika.BasicProperties(reply_to=hostname, correlation_id = id), body = "Picture taken: %r  Successes/Trials: %s/%s" % (ret, count, trials) )
 			continue
 		print "count =", count
-		if count == 10:
-			calibration.calibrate(hostname, ip)
+		if count == 10 and not calibrated:
+			calibration.calibrate(hostname, ip4, time_stamp)
 			message = "calibrated"
+			calibrated = True
+		elif calibrated:
+			message ="already calibrated. trials: %i" % trials
 	elif response == "4":
 		print "Command received: Restart calibration"
 		count = 0
 		trials = 0
+		calibrated = False
 		message = "Calibration reset"
 	else:
 		message=  "Command '%s' not found" % response
